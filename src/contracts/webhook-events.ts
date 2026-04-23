@@ -44,6 +44,8 @@ export interface UserProvisionedPayload {
   apps: string[]
   /** The resolved app-local role for the recipient app. NULL if the app has no declared roles. */
   appRole: string | null
+  /** The employee's office/country branch label (e.g. "Indonesia", "Thailand"). NULL if not set. */
+  branch?: string | null
 }
 
 export interface UserUpdatedPayload {
@@ -58,6 +60,8 @@ export interface UserUpdatedPayload {
   changedFields: string[]
   /** The current resolved app-local role for the recipient app. NULL if unchanged or no declared roles. */
   appRole: string | null
+  /** The employee's office/country branch label (e.g. "Indonesia", "Thailand"). NULL if not set. */
+  branch?: string | null
 }
 
 export interface UserOffboardedPayload {
