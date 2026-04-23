@@ -1,0 +1,25 @@
+{
+  "name": "@coms-portal/shared",
+  "version": "1.0.0",
+  "description": "Shared contracts, types, and constants for the COMS portal platform",
+  "type": "module",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrdoorba/coms-shared.git"
+  },
+  "files": ["src"],
+  "exports": {
+    ".": "./src/index.ts",
+    "./constants/*": "./src/constants/*.ts",
+    "./contracts/*": "./src/contracts/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --declaration false --declarationMap false",
+    "build": "tsc"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.8"
+  }
+}
