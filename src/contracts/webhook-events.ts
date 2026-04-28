@@ -3,6 +3,10 @@ import type { PortalRole } from './auth'
 export const PORTAL_WEBHOOK_CONTRACT_VERSION = 1 as const
 
 export const PORTAL_WEBHOOK_EVENTS = [
+  'alias.deleted',
+  'alias.resolved',
+  'alias.updated',
+  'app_config.updated',
   'session.revoked',
   'user.provisioned',
   'user.updated',
@@ -46,6 +50,8 @@ export interface UserProvisionedPayload {
   appRole: string | null
   /** The employee's office/country branch label (e.g. "Indonesia", "Thailand"). NULL if not set. */
   branch?: string | null
+  /** Per-recipient app-config slice. Each recipient receives only its own slice. */
+  appConfig?: { config: Record<string, unknown>; schemaVersion: number } | null
 }
 
 export interface UserUpdatedPayload {
@@ -70,6 +76,36 @@ export interface UserOffboardedPayload {
   email: string
   /** ISO */
   offboardedAt: string
+}
+
+export interface AliasResolvedPayload {
+  aliasId: string
+  aliasNormalized: string
+  portalSub: string
+  isPrimary: boolean
+}
+
+export interface AliasUpdatedPayload {
+  aliasId: string
+  aliasNormalized: string
+  portalSub: string
+  isPrimary: boolean
+  previousIsPrimary?: boolean
+  previousIdentityUserId?: string
+}
+
+export interface AliasDeletedPayload {
+  aliasId: string
+  aliasNormalized: string
+  portalSub: string
+}
+
+export interface AppConfigUpdatedPayload {
+  portalSub: string
+  config: Record<string, unknown>
+  previousConfig: Record<string, unknown>
+  schemaVersion: number
+  batchId: string | null
 }
 
 export const PORTAL_WEBHOOK_SIGNATURE_HEADER = 'X-Portal-Signature'
