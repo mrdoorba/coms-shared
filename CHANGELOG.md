@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.0] - 2026-04-30
+
+### Added
+- `UserEmailEntry` interface — wire shape for a single email address entry (`address`, `kind`, `isPrimary`, `verified`, `addedBy`).
+- `USER_EMAIL_KINDS` const array and `UserEmailKind` type (`'workspace' | 'personal'`).
+- `USER_EMAIL_ADDED_BY` const array and `UserEmailAddedBy` type (`'admin' | 'self' | 'csv_import' | 'sheet_sync' | 'backfill' | 'bootstrap'`).
+- Optional `emails?: UserEmailEntry[]` field on `UserProvisionedPayload` — additive; existing consumers unaffected.
+- Optional `emails?: UserEmailEntry[]` field on `UserUpdatedPayload` — additive; existing consumers unaffected.
+
+Add additive `emails[]` array on user-provisioning / user-update webhook payloads to support spec-06 dual-email auth. Existing scalar `email` field unchanged.
+
 ## [1.4.1] - 2026-04-29
 
 ### Deprecated

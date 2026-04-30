@@ -2,6 +2,32 @@ import type { PortalRole } from './auth'
 
 export const PORTAL_WEBHOOK_CONTRACT_VERSION = 1 as const
 
+// ---------------------------------------------------------------------------
+// Email entry types (spec-06 dual-email auth)
+// ---------------------------------------------------------------------------
+
+export const USER_EMAIL_KINDS = ['workspace', 'personal'] as const
+export type UserEmailKind = (typeof USER_EMAIL_KINDS)[number]
+
+export const USER_EMAIL_ADDED_BY = [
+  'admin',
+  'self',
+  'csv_import',
+  'sheet_sync',
+  'backfill',
+  'bootstrap',
+] as const
+export type UserEmailAddedBy = (typeof USER_EMAIL_ADDED_BY)[number]
+
+/** A single email address entry on a user, as surfaced in webhook payloads. */
+export interface UserEmailEntry {
+  address: string
+  kind: UserEmailKind
+  isPrimary: boolean
+  verified: boolean
+  addedBy: UserEmailAddedBy
+}
+
 export const PORTAL_WEBHOOK_EVENTS = [
   'alias.deleted',
   'alias.resolved',
@@ -52,6 +78,13 @@ export interface UserProvisionedPayload {
   branch?: string | null
   /** Per-recipient app-config slice. Each recipient receives only its own slice. */
   appConfig?: { config: Record<string, unknown>; schemaVersion: number } | null
+  /**
+   * All email addresses associated with this user (spec-06 dual-email auth).
+   * Additive — existing consumers that do not read this field are unaffected.
+   * The scalar `email` field above is preserved and equals the primary address
+   * per Q8a precedence (workspace if present, else personal).
+   */
+  emails?: UserEmailEntry[]
 }
 
 export interface UserUpdatedPayload {
@@ -68,6 +101,13 @@ export interface UserUpdatedPayload {
   appRole: string | null
   /** The employee's office/country branch label (e.g. "Indonesia", "Thailand"). NULL if not set. */
   branch?: string | null
+  /**
+   * All email addresses associated with this user (spec-06 dual-email auth).
+   * Additive — existing consumers that do not read this field are unaffected.
+   * The scalar `email` field above is preserved and equals the primary address
+   * per Q8a precedence (workspace if present, else personal).
+   */
+  emails?: UserEmailEntry[]
 }
 
 export interface UserOffboardedPayload {
