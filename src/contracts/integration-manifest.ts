@@ -136,6 +136,13 @@ export interface PortalIntegrationManifest {
   /** App-local roles. The portal does not enforce these — it stores and
    *  forwards them. The app owns interpretation and fine-grained permissions. */
   appRoles?: PortalAppRole[]
+  /**
+   * IDs of the org taxonomies (`branches`, `teams`, `departments`, ...) this
+   * app cares about. Portal filters `GET /api/taxonomies/sync` and the
+   * `taxonomy.upserted` / `taxonomy.deleted` fan-out by this list. Omit or
+   * leave empty for apps that don't consume taxonomies.
+   */
+  taxonomies?: string[]
 }
 
 export function createPortalIntegrationManifest(

@@ -33,7 +33,10 @@ export const PORTAL_WEBHOOK_EVENTS = [
   'alias.resolved',
   'alias.updated',
   'app_config.updated',
+  'employment.updated',
   'session.revoked',
+  'taxonomy.deleted',
+  'taxonomy.upserted',
   'user.provisioned',
   'user.updated',
   'user.offboarded',
@@ -146,6 +149,114 @@ export interface AppConfigUpdatedPayload {
   previousConfig: Record<string, unknown>
   schemaVersion: number
   batchId: string | null
+}
+
+/**
+ * Spec 07 finalised name for the per-recipient app-config webhook payload.
+ * Identical structure to {@link AppConfigUpdatedPayload}; kept as an alias so
+ * Heroes-side handlers can spell the type by its spec-mandated name.
+ */
+export type AppConfigEvent = AppConfigUpdatedPayload
+
+// ---------------------------------------------------------------------------
+// Spec 07 — org taxonomies + employment block (v1.6.0)
+// ---------------------------------------------------------------------------
+
+/**
+ * A reference to a single entry inside an org taxonomy. `value` is a
+ * denormalised display snapshot — consumers store it for display without
+ * re-querying. Source-of-truth lives in portal `org_taxonomies`.
+ */
+export interface TaxonomyRef {
+  taxonomyId: string
+  key: string
+  value: string
+}
+
+/**
+ * The HR-shaped block carried alongside `user` and `appConfig` on
+ * `user.provisioned` / `employment.updated`. `branch`, `team`, `department`
+ * are taxonomy refs; the remaining fields are free-form scalars. Every field
+ * is nullable — a freshly provisioned user with no HR data fills the block
+ * with nulls rather than omitting fields.
+ */
+export interface EmploymentBlock {
+  branch: TaxonomyRef | null
+  team: TaxonomyRef | null
+  department: TaxonomyRef | null
+  position: string | null
+  phone: string | null
+  employmentStatus: string | null
+  talentaId: string | null
+  attendanceName: string | null
+  leaderName: string | null
+  birthDate: string | null
+}
+
+/**
+ * Payload for `taxonomy.upserted`. Carries the full set of changed entries
+ * for one taxonomyId per Spec 07 §Race window — never one event per entry.
+ */
+export interface TaxonomyUpsertedPayload {
+  taxonomyId: string
+  entries: Array<{
+    key: string
+    value: string
+    metadata: Record<string, unknown> | null
+  }>
+}
+
+/** Payload for `taxonomy.deleted`. Carries the keys removed under taxonomyId. */
+export interface TaxonomyDeletedPayload {
+  taxonomyId: string
+  keys: string[]
+}
+
+/**
+ * Discriminated union over the two taxonomy event variants. Use when a
+ * handler dispatches on `kind`; otherwise prefer the variant-specific
+ * payload types directly.
+ */
+export type TaxonomyEvent =
+  | ({ kind: 'upserted' } & TaxonomyUpsertedPayload)
+  | ({ kind: 'deleted' } & TaxonomyDeletedPayload)
+
+/**
+ * Payload for `employment.updated`. Fired on real HR-field deltas only — the
+ * portal suppresses the event when the diff is empty. `employment` carries
+ * the full post-update block, `previousEmployment` the matching pre-update
+ * block (handlers that only need the delta can compare them, but the spec
+ * keeps the full blocks so handlers can re-materialise without a re-fetch).
+ */
+export interface EmploymentUpdatedPayload {
+  user: { portalSub: string }
+  employment: Partial<EmploymentBlock> | EmploymentBlock
+  previousEmployment: Partial<EmploymentBlock> | EmploymentBlock
+}
+
+/**
+ * The address an H-app should use to contact this user. Resolved per Spec 06
+ * §Q8a precedence: workspace email if present, else personal-primary, else
+ * the first personal entry. H-apps that need email-by-kind should pull from
+ * `GET /api/users/:portalSub/emails`.
+ */
+export type ContactEmail = string
+
+/**
+ * The Spec 07 envelope shape carried by `user.provisioned`. Heroes Deploy A
+ * reads from this shape; portal dual-emits legacy top-level fields
+ * (`email`, `appRole`, `branch`) alongside this envelope until PR 07-5.
+ */
+export interface WebhookUserEnvelope {
+  user: {
+    portalSub: string
+    name: string
+    /** uuid of the alias resolved as primary, or null when not yet resolved */
+    primaryAliasId: string | null
+  }
+  contactEmail: ContactEmail
+  employment: EmploymentBlock | null
+  appConfig: { config: Record<string, unknown>; schemaVersion: number } | null
 }
 
 export const PORTAL_WEBHOOK_SIGNATURE_HEADER = 'X-Portal-Signature'
